@@ -1,0 +1,13 @@
+﻿@page
+@model MercadonaUI.RazorPages.Pages.MercaMudBlazorModel
+@{
+    ViewData["Title"] = "Mrkdona - MudBlazor";
+}
+
+<div style="font-size: 16px;">
+    @(await Html.RenderComponentAsync<Mercadona>(RenderMode.ServerPrerendered))
+</div>
+
+@section Scripts {
+    <script src="_framework/blazor.server.js"></script>
+}
