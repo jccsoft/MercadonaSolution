@@ -1,9 +1,9 @@
-﻿@inject IJSRuntime JSRuntime;
+﻿@inject NavigationManager navManager
 
 @if(Product != null){
-    <MudTooltip Text="@Product.Name" Color="Color.Tertiary" Placement="Placement.Bottom" Arrow="true">
-        <MudButton Style="text-align:left;font-size:inherit;">
-            <MudPaper Class="pa-2 ma-2" Elevation="2" Width="10rem" Height="15rem" Style="font-size:inherit;">
+    <MudTooltip Text="@Product.Name" Color="Color.Primary" Placement="Placement.Bottom" Arrow="true">
+        <MudButton Style="text-align:left;font-size:inherit;" OnClick="HandleProductClick">
+            <MudPaper Class="pa-2 ma-2" Elevation="2" Width="10rem" Height="14rem" Style="font-size:inherit;">
                 <MudStack Spacing="1">
                     <MudPaper MaxHeight="7rem" Height="7rem" Class="mb-1" Elevation="0">
                         <div class="d-flex justify-center" style="height: 7.5rem;">
@@ -36,4 +36,14 @@
 @code {
     [Parameter]
     public ProductModel? Product { get; set; }
+    [Parameter]
+    public bool FromLandingPage { get; set; }
+
+    public void HandleProductClick()
+    {
+        if(Product != null)
+        {
+            navManager.NavigateTo($"/product?id={Product.Id}&fromlanding={FromLandingPage}");
+        }
+    }
 }

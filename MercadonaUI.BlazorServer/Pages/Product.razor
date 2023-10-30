@@ -1,0 +1,103 @@
+﻿@page "/product"
+@inject IHttpClientFactory _clientFactory
+@inject ImagesHelper _imagesHelper
+@inject NavigationManager navManager
+@inject IJSRuntime JSRuntime
+
+@if (string.IsNullOrWhiteSpace(errorMessage) == false)
+{
+    <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
+}
+else if (recordsNotFound)
+{
+    <MudText>Producto no encontrado</MudText>
+}
+else if (productsResponse == null || productsResponse.Data == null)
+{
+    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+}
+else
+{
+    <MudContainer MaxWidth="MaxWidth.Small" Class="mt-10">
+        <MudPaper Elevation="2" Width="25rem" Style="background-color: whitesmoke">
+            <MudGrid >
+                <MudItem xs="6">
+                    <div class="d-flex justify-center ms-3">
+                        <MudImage Src="@_product.Image" Fluid="true" ObjectFit="ObjectFit.Contain" Alt="@_product.Name" ObjectPosition="ObjectPosition.Center" Class="rounded-lg" />
+                    </div>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudStack Spacing="3">
+                        <MudText GutterBottom Style="font-size:larger; font-weight:bold; max-height: 5rem;">@_product.Name</MudText>
+                        <MudText >@_product.Packaging</MudText>
+                        <MudText >@_product.ReferencePriceString</MudText>
+                        <MudText Style="font-size:large; font-weight:bold">@_product.UnitPriceString</MudText>
+                    </MudStack>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+
+        <MudButton OnClick="GoBack" Class="mt-10" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ArrowBack" Color="Color.Primary">
+            Volver
+        </MudButton>
+        
+        
+    </MudContainer>
+}
+
+
+@code {
+    [EditorRequired]
+    [Parameter]
+    [SupplyParameterFromQuery(Name ="id")]
+    public int Id { get; set; }
+
+    [EditorRequired]
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "fromlanding")]
+    public bool FromLandingPage { get; set; }
+
+    private HttpClient? httpClient;
+    private ApiResponse<ProductModel>? productsResponse;
+    private ProductModel _product = new();
+    private bool recordsNotFound = false;
+    private string errorMessage = "";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await base.OnParametersSetAsync();
+
+        httpClient = _clientFactory.CreateClient(MercadonaOptions.HttpClientName);
+
+        HttpResponseMessage response = await httpClient!.GetAsync($"products/{Id}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            productsResponse = await response.Content.ReadFromJsonAsync<ApiResponse<ProductModel>>();
+            if (productsResponse == null || productsResponse.Data == null || productsResponse.TotalCount == 0)
+            {
+                recordsNotFound = true;
+                return;
+            }
+            _product = productsResponse.Data;
+            await _imagesHelper.DownloadProductsImages(productsResponse.Data);
+        }
+        else
+        {
+            errorMessage = response.ReasonPhrase ?? "Error desconocido";
+        }
+    }
+
+    private async Task GoBack()
+    {
+        if (FromLandingPage)
+        {
+            navManager.NavigateTo("/landing");
+        }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("history.back");
+        }
+    }
+
+}

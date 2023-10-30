@@ -1,19 +1,22 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager navManager
 
-<MudThemeProvider />
+<MudThemeProvider Theme="@_myTheme" />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
 <MudLayout>
-    <MudAppBar Elevation="0">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+    <MudAppBar Elevation="1" Fixed="true">
+
+        <MudIconButton Icon="@Icons.Material.Filled.Home" Size="Size.Large" Color="Color.Primary" Class="p-0 m-0" OnClick="HandleHomeClick" />
+
+        <MudTextField Value="@_search" ValueChanged="((string value) => SearchValueChanged(value))"
+                      DebounceInterval="200" Immediate="true"
+                      Placeholder="Buscar productos" Variant="Variant.Outlined" Class="mx-3 mt-3" 
+                      Margin="Margin.Dense" IconSize="Size.Medium" Style="max-width: 300px; background-color: whitesmoke"
+                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Default" />
     </MudAppBar>
-    <MudDrawer @bind-Open="_drawerOpen" Elevation="1">
-        <MudDrawerHeader>
-            <MudText Typo="Typo.h6">Mercadona</MudText>
-        </MudDrawerHeader>
-        <NavMenu />
-    </MudDrawer>
+
     <MudMainContent>
         <MudContainer MaxWidth="MaxWidth.False" Class="my-2 pt-2">
             @Body
@@ -22,10 +25,27 @@
 </MudLayout>
 
 @code {
-    bool _drawerOpen = false;
+    MyTheme _myTheme = new();
 
-    void DrawerToggle()
+    string _search = "";
+
+    private void HandleHomeClick()
     {
-        _drawerOpen = !_drawerOpen;
+        _search = "";
+        navManager.NavigateTo("/landing");
+    }
+
+    private void SearchValueChanged(string newValue)
+    {
+        newValue = newValue.Trim().ToLower();
+        if (_search != newValue)
+        {
+            if (newValue.Length > 0 && (newValue.Length >= 3 || _search.Length > newValue.Length))
+                navManager.NavigateTo($"/search-products?query={newValue}");
+            else
+                navManager.NavigateTo("/");
+
+            _search = newValue;
+        }
     }
 }

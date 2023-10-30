@@ -1,0 +1,132 @@
+﻿@page "/"
+@inject IHttpClientFactory _clientFactory
+@inject ImagesHelper _imagesHelper
+
+<PageTitle>Mercadona</PageTitle>
+
+<RadzenStack>
+    <RadzenRow>
+        <RadzenColumn Size="2">
+        </RadzenColumn>
+        <RadzenColumn Size="10">
+            <RadzenTextBox Placeholder="Search ..." style="display: block; width: 100%"
+            @oninput="@SearchValueChanged"/>
+        </RadzenColumn>
+    </RadzenRow>
+    <RadzenRow>
+        <RadzenColumn Size="2">
+            <p>menú</p>
+        </RadzenColumn>
+        <RadzenColumn Size="10">
+            @if (string.IsNullOrWhiteSpace(errorMessage) == false)
+            {
+                <RadzenAlert AlertStyle="AlertStyle.Danger">@errorMessage</RadzenAlert>
+            }
+            else if (requestParams.ReadyForRequest() == false)
+            {
+                <span></span>
+            }
+            else if (recordsNotFound)
+            {
+                <p>No se han encontrado productos que coincidan con estos criterios</p>
+            }
+            else if (productsResponse == null || productsResponse.Data == null)
+            {
+                <p Style="font-size:inherit" GutterBottom="true">Buscando productos...</p>
+            }
+            else
+            {
+                <p style="font-size: smaller;">@headerMessage</p>
+                @foreach (var product in @productsResponse.Data)
+                {
+                    <ProductDisplay Product="product" />
+                }
+            }
+        </RadzenColumn>
+    </RadzenRow>
+</RadzenStack>
+
+
+@code {
+    private HttpClient? httpClient;
+    private ApiResponse<List<ProductModel>>? productsResponse;
+    private ProductsRequestParams requestParams = new();
+    private CategoryDto? selectedCategory;
+
+    private bool recordsNotFound = false;
+    private string errorMessage = "";
+    private string headerMessage = "";
+
+
+    protected override void OnInitialized()
+    {
+        httpClient = _clientFactory.CreateClient(MercadonaOptions.HttpClientName);
+        requestParams.ItemsXPage = 24;
+    }
+
+    private async Task GetProducts()
+    {
+        productsResponse = null;
+        errorMessage = "";
+        recordsNotFound = false;
+
+        if (requestParams.ReadyForRequest())
+        {
+            string httpRequest = $"products{requestParams.GetParametersForUrl()}";
+
+            HttpResponseMessage response = await httpClient!.GetAsync(httpRequest);
+
+            if (response.IsSuccessStatusCode)
+            {
+                productsResponse = await response.Content.ReadFromJsonAsync<ApiResponse<List<ProductModel>>>();
+                if (productsResponse == null || productsResponse.Data == null || productsResponse.TotalCount == 0)
+                {
+                    recordsNotFound = true;
+                    return;
+                }
+
+                headerMessage = $"Mostrando {productsResponse.Data.Count} de {productsResponse.TotalCount} productos.";
+                await _imagesHelper.DownloadProductsImages(productsResponse.Data);
+
+            }
+            else
+            {
+                errorMessage = response.ReasonPhrase ?? "Error desconocido";
+            }
+        }
+
+    }
+
+
+
+    private async Task SearchValueChanged(ChangeEventArgs args)
+    {
+        string newValue = $"{args.Value}";
+        if (requestParams.Search.Trim().ToLower() != newValue.Trim().ToLower())
+        {
+            requestParams.Search = newValue;
+            requestParams.CurrentPage = 1;
+            await GetProducts();
+        }
+    }
+
+    private async Task SelectedPageChanged(int newValue)
+    {
+        requestParams.CurrentPage = newValue;
+        await GetProducts();
+    }
+
+
+    private async Task OnSelectedCategoryChanged(CategoryDto value)
+    {
+        selectedCategory = value;
+        requestParams.CategoryId = selectedCategory.Id;
+        await GetProducts();
+    }
+
+    private async Task CloseCategory()
+    {
+        requestParams.CategoryId = 0;
+        await GetProducts();
+    }
+}

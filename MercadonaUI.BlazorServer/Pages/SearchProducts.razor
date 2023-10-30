@@ -1,0 +1,43 @@
+﻿@page "/search-products"
+
+<MudGrid Style="font-size: 0.8rem;">
+    <MudItem xs="2">
+        <MenuCatTreeView SelectedCategoryChanged="OnSelectedCategoryChanged"
+                         CategoryIds="categoryIds" />
+    </MudItem>
+
+    <MudItem xs="10">
+        <ProductsGrid Search="@Query" SelectedCategory="@selectedCategory" 
+            SelectedCategoryClosed="OnSelectedCategoryClosed"
+            CategoryIdsChanged="OnCategoryIdsChanged" />
+    </MudItem>
+</MudGrid>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "query")]
+    public string Query { get; set; } = "";
+
+    private CategoryDto? selectedCategory;
+    private List<int> categoryIds = new();
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+    }
+
+    private void OnSelectedCategoryChanged(CategoryDto value)
+    {
+        selectedCategory = value;
+    }
+
+    private void OnSelectedCategoryClosed()
+    {
+        selectedCategory = null;
+    }
+
+    private void OnCategoryIdsChanged(List<int> value)
+    {
+        categoryIds = value;
+    }
+}

@@ -149,6 +149,44 @@ public class MercadonaController : ControllerBase
     }
 
 
+    [HttpGet("Products/Landing/{numberOfProducts}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ApiResponse<List<ProductDto>>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetLandingProducts(int numberOfProducts)
+    {
+        ApiResponse<List<ProductDto>> apiResponse = new();
+
+        try
+        {
+            Guard.Against.NegativeOrZero(numberOfProducts);
+
+            var products = JsonHelper<List<ProductDto>>.ReadFromJson(_settings.ProductsFilePath);
+            Guard.Against.NullOrEmpty(products, "", $"No se han encontrado productos en {_settings.ProductsFilePath}");
+
+            apiResponse.Data = new();
+            var rng = new Random();
+            for (int i = 0; i < numberOfProducts; i++)
+            {
+                int index = rng.Next(products.Count);
+                apiResponse.Data.Add(products.ElementAt(index));
+            }
+
+            apiResponse.UpdateSummary(_settings.FullDBFilePath, numberOfProducts);
+        }
+        catch (Exception ex)
+        {
+            apiResponse.ProblemDetail = new(ex, Request);
+
+            _logger.LogCritical(ex, "");
+
+            Response.StatusCode = (ex.GetType() == typeof(ArgumentException) ?
+                                    StatusCodes.Status400BadRequest :
+                                    StatusCodes.Status500InternalServerError);
+        }
+
+        return await Task.FromResult(new ObjectResult(apiResponse));
+    }
 
     #region IGNORE
 

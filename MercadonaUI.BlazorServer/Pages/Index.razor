@@ -1,0 +1,48 @@
+﻿@page "/"
+@page "/landing"
+
+@implements IDisposable
+@inject PersistentComponentState applicationState
+@inject NavigationManager navManager
+
+
+@if (showLanding)
+{
+    <Landing />
+}
+
+@code{
+    private const string cachingKey = "pageIndex";
+    private PersistingComponentStateSubscription persistingSubscription;
+
+    private bool showLanding = false;
+
+    protected override void OnInitialized()
+    {
+        if (navManager.Uri.Contains("landing"))
+        {
+            showLanding = true;
+        }
+        else
+        {
+            persistingSubscription = applicationState.RegisterOnPersisting(PersistData);
+
+            if (applicationState.TryTakeFromJson<bool>(cachingKey, out var restored))
+            {
+                showLanding = true;
+            }            
+        }
+
+    }
+
+    private Task PersistData()
+    {
+        applicationState.PersistAsJson(cachingKey, true);
+        return Task.CompletedTask;
+    }
+
+    public void Dispose()
+    {
+        persistingSubscription.Dispose();
+    }
+}

@@ -1,9 +1,8 @@
-﻿@page "/"
+﻿
 @inject IHttpClientFactory _clientFactory
 @inject ImagesHelper _imagesHelper
-@* @inject IOptions<MercadonaOptions> _options *@
 
-<PageTitle>Productos</PageTitle>
+<PageTitle>Mercadona</PageTitle>
 
 <MudGrid Style="font-size: 0.8rem;">
 
@@ -16,7 +15,7 @@
     </MudItem>
 
     <MudItem xs="2">
-        <MenuCategories SelectedCategoryChanged="OnSelectedCategoryChanged" />
+        <MenuCatTreeView SelectedCategoryChanged="OnSelectedCategoryChanged" />
     </MudItem>
 
     <MudItem xs="10">
@@ -58,6 +57,7 @@
                         Color="Color.Primary" Count="@productsResponse.TotalPages" Class="mb-1"/>
                 </div>
             }
+
 
             <MudPaper Class="d-flex flex-wrap gap-0" Elevation="0">
                 @foreach (var product in @productsResponse.Data)

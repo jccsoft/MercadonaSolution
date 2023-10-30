@@ -1,0 +1,29 @@
+﻿    
+<MudContainer MaxWidth="MaxWidth.Large">
+    <MudText Style="font-weight: bold">Productos del momento</MudText>
+    <MudText GutterBottom Style="font-size:smaller">Selección de productos destacados</MudText>
+     <MudCarousel Class="mud-width-full align-content-center" Style="height:250px;" ShowArrows="@arrows" ShowBullets="@bullets" EnableSwipeGesture="@enableSwipeGesture" AutoCycle="@autocycle" TData="object">
+         @foreach (string fileName in Directory.EnumerateFiles("wwwroot/slider"))
+        {
+            <MudCarouselItem Transition="transition">
+                <div class="d-flex" style="height:100%">
+                    <MudImage Fluid="true" Src="@($"/slider/{Path.GetFileName(fileName)}")" />
+                </div>
+            </MudCarouselItem>
+        }
+    </MudCarousel>
+
+    <MudText Class="mt-10" Style="font-weight:bold;">Bajadas de precio</MudText>
+    <MudText GutterBottom Style="font-size:smaller">Échales un vistazo</MudText>
+     
+    <ProductsGrid LandingMode="true" ItemsXPage="20" />
+
+ </MudContainer>
+
+ @code {
+    private bool arrows = false;
+    private bool bullets = false;
+    private bool enableSwipeGesture = false;
+    private bool autocycle = true;
+    private Transition transition = Transition.Slide;
+}

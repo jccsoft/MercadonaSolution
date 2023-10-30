@@ -1,0 +1,205 @@
+﻿@inject IHttpClientFactory _clientFactory
+@inject ImagesHelper _imagesHelper
+
+<MudProgressLinear Color="@(CheckShowLoading() ? Color.Primary: Color.Transparent)" Indeterminate="@CheckShowLoading()" Class="my-2" />
+
+@if (requestParams.CategoryId > 0)
+{
+    <MudChip OnClose="CloseCategory" Color="Color.Default" Style="font-size:inherit" Class="ml-3 mb-2">
+        @SelectedCategory!.Name
+    </MudChip>
+}
+
+@if (string.IsNullOrWhiteSpace(errorMessage) == false)
+{
+    <MudAlert Severity="Severity.Error">@errorMessage</MudAlert>
+}
+else if (recordsNotFound)
+{
+    <MudText>No se han encontrado productos</MudText>
+}
+else if (products != null)
+{
+    @if (LandingMode == false)
+    {
+        <MudText Style="font-size: smaller;" Class="ml-4" >@headerMessage</MudText>
+
+        if (CheckShowPagination())
+        {
+            <div class="d-flex flex-column align-center">
+                <MudPagination Selected="@requestParams.CurrentPage" SelectedChanged="((int value) => SelectedPageChanged(value))"
+                               Count="@productsResponse!.TotalPages"
+                               Color="Color.Primary" Class="mb-1" />
+            </div>
+        }  
+    }
+
+    <MudPaper Class="d-flex flex-wrap gap-0" Elevation="0" Style="font-size: 0.7rem;">
+        @foreach (var product in @products)
+        {
+            <ProductDisplay Product="product" FromLandingPage="@LandingMode" />
+        }
+    </MudPaper>
+
+    <MudScrollToTop>
+        <MudFab Color="Color.Primary" StartIcon="@Icons.Material.Filled.ArrowCircleUp" />
+    </MudScrollToTop>
+}
+
+@code {
+    [Parameter]
+    public string Search { get; set; } = "";
+    [Parameter]
+    public bool LandingMode { get; set; } = false;
+    [Parameter]
+    public int ItemsXPage { get; set; } = 24;
+    [Parameter]
+    public CategoryDto SelectedCategory { get; set; } = new();
+
+    [Parameter]
+    public EventCallback SelectedCategoryClosed { get; set; }
+    [Parameter]
+    public EventCallback<List<int>> CategoryIdsChanged { get; set; }
+
+
+    private HttpClient? httpClient;
+    private ApiResponse<List<ProductModel>>? productsResponse;
+    private List<ProductModel>? products;
+    private ProductsRequestParams requestParams = new();
+
+
+    private bool recordsNotFound = false;
+    private string errorMessage = "";
+    private string headerMessage = "";
+    private bool loadingProducts = false;
+
+    private const string landingFilePath = "./Data/landing.json";
+    private bool landingProductsLoaded = false;
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+
+        if (CheckParamsChanged()) return;
+
+        httpClient = _clientFactory.CreateClient(MercadonaOptions.HttpClientName);
+
+        requestParams = new()
+        {
+            ItemsXPage = ItemsXPage,
+            Search = Search,
+            CurrentPage = 1,
+            CategoryId = SelectedCategory?.Id ?? 0
+        };
+
+        RestoreLandingProducts();
+
+        await GetProducts();
+    }
+
+    private async Task GetProducts()
+    {
+        loadingProducts = true;
+
+        recordsNotFound=false;
+        errorMessage = "";
+
+        if (requestParams.ReadyForRequest() || LandingMode)
+        {
+            string httpRequest = "products" + (LandingMode ? $"/landing/{ItemsXPage}" : requestParams.GetParametersForUrl());
+
+            HttpResponseMessage response = await httpClient!.GetAsync(httpRequest);
+
+            if (response.IsSuccessStatusCode)
+            {
+                productsResponse = await response.Content.ReadFromJsonAsync<ApiResponse<List<ProductModel>>>();
+                if (productsResponse == null || productsResponse.Data == null || productsResponse.TotalCount == 0)
+                {
+                    recordsNotFound = true;
+                    loadingProducts = false;
+                    return;
+                }
+
+                headerMessage = $"Mostrando {productsResponse.Data.Count} de {productsResponse.TotalCount} productos.";
+                await _imagesHelper.DownloadProductsImages(productsResponse.Data);
+
+
+                if (LandingMode == false || landingProductsLoaded == false)
+                {
+                    products = productsResponse.Data;
+                    UpdateCategoryList();
+                }
+
+                SaveLandingProducts(); 
+            }
+            else
+            {
+                errorMessage = response.ReasonPhrase ?? "Error desconocido";
+            }
+        }
+        loadingProducts = false;
+    }
+
+    private async Task SelectedPageChanged(int newValue)
+    {
+        requestParams.CurrentPage = newValue;
+        await GetProducts();
+    }
+
+
+    private void SaveLandingProducts()
+    {
+        if (LandingMode && productsResponse != null && productsResponse.Data != null)
+            JsonHelper<List<ProductModel>>.WriteToJson(productsResponse!.Data, landingFilePath);
+    }
+
+    private void RestoreLandingProducts()
+    {
+        if (LandingMode && landingProductsLoaded == false && File.Exists(landingFilePath))
+        {
+            products = JsonHelper<List<ProductModel>>.ReadFromJson(landingFilePath);
+
+            landingProductsLoaded = true;
+        }
+    }
+
+    private async Task CloseCategory()
+    {
+        requestParams.CategoryId = 0;
+        await GetProducts();
+        await SelectedCategoryClosed.InvokeAsync();
+    }
+
+    private void UpdateCategoryList()
+    {
+        if(SelectedCategory != null) return;
+
+        List<int> categoryIds = new();
+
+        if (products != null)
+        {
+            foreach(var product in products)
+            {
+                foreach(var id in product.CategoryIds)
+                {
+                    if (categoryIds.Contains(id) == false) categoryIds.Add(id);
+                }
+            }
+            categoryIds.Sort();
+        }
+
+        CategoryIdsChanged.InvokeAsync(categoryIds);
+    }
+
+
+    private bool CheckShowLoading() => loadingProducts && landingProductsLoaded == false;
+
+    private bool CheckShowPagination() => (productsResponse != null && productsResponse.TotalPages > 1);
+
+    private bool CheckParamsChanged() => ( requestParams != null && 
+                                               requestParams.Search == Search &&
+                                               requestParams.CategoryId == (SelectedCategory?.Id ?? 0) &&
+                                               LandingMode == false &&
+                                               landingProductsLoaded == false);
+
+}

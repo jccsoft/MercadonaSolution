@@ -1,5 +1,5 @@
-﻿using MercadonaUI.BlazorServer.Models;
-using MercadonaAPI.Shared.Models;
+﻿using MercadonaAPI.Shared.Models;
+using MercadonaUI.BlazorServer.Models;
 
 namespace MercadonaUI.BlazorServer.Helpers;
 
@@ -18,6 +18,10 @@ public class ImagesHelper
         {
             await DownloadAndSave(product.Thumbnail, "./wwwroot/images", Path.GetFileName(product.Image));
         }
+    }
+    public async Task DownloadProductsImages(ProductModel product)
+    {
+        await DownloadAndSave(product.Thumbnail, "./wwwroot/images", Path.GetFileName(product.Image));
     }
 
     public async Task DownloadAndSave(string sourceFile, string destinationFolder, string destinationFileName)
@@ -76,9 +80,6 @@ public class ImagesHelper
 
     private static async Task SaveStream(Stream fileStream, string destinationFile)
     {
-        //if (!Directory.Exists(destinationFolder))
-        //    Directory.CreateDirectory(destinationFolder);
-
         try
         {
 
