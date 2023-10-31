@@ -21,4 +21,10 @@
     <ProjectReference Include="..\MercadonaAPI.Shared\MercadonaAPI.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="Pages\Categories.razor">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </Content>
+  </ItemGroup>
+
 </Project>

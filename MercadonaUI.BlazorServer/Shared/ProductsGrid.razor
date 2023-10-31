@@ -5,9 +5,16 @@
 
 @if (requestParams.CategoryId > 0)
 {
-    <MudChip OnClose="CloseCategory" Color="Color.Default" Style="font-size:inherit" Class="ml-3 mb-2">
-        @SelectedCategory!.Name
-    </MudChip>
+    if (requestParams.Search.Any())
+    {
+        <MudChip OnClose="CloseCategory" Color="Color.Default" Style="font-size:inherit" Class="ml-3 mb-2">
+            @SelectedCategory!.Name
+        </MudChip>        
+    }
+    else
+    {
+        <MudText Typo="Typo.h6">@SelectedCategory!.Name</MudText>
+    }
 }
 
 @if (string.IsNullOrWhiteSpace(errorMessage) == false)
@@ -34,7 +41,7 @@ else if (products != null)
         }  
     }
 
-    <MudPaper Class="d-flex flex-wrap gap-0" Elevation="0" Style="font-size: 0.7rem;">
+    <MudPaper Class="d-flex flex-wrap gap-0 align-content-center" Elevation="0" Style="font-size: 0.7rem;">
         @foreach (var product in @products)
         {
             <ProductDisplay Product="product" FromLandingPage="@LandingMode" />

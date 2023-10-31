@@ -1,0 +1,21 @@
+﻿@page "/categories"
+
+<MudGrid Style="font-size: 0.8rem;">
+    <MudItem xs="2">
+        <MenuCategories SelectedCategoryChanged="OnSelectedCategoryChanged" SetDefaultCategory="true"/>
+    </MudItem>
+
+    <MudItem xs="10">
+        <ProductsGrid SelectedCategory="@selectedCategory" />
+    </MudItem>
+</MudGrid>
+
+@code {
+
+    private CategoryDto? selectedCategory;
+
+    private void OnSelectedCategoryChanged(CategoryDto value)
+    {
+        selectedCategory = value;
+    }
+}

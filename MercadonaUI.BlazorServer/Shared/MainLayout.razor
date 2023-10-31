@@ -6,15 +6,20 @@
 <MudSnackbarProvider />
 
 <MudLayout>
-    <MudAppBar Elevation="1" Fixed="true">
-
+    <MudAppBar Elevation="1" Fixed="true" Style="align-content:flex-start">
+        
         <MudIconButton Icon="@Icons.Material.Filled.Home" Size="Size.Large" Color="Color.Primary" Class="p-0 m-0" OnClick="HandleHomeClick" />
+        
+        <div class="d-flex align-content-start">
+            <MudTextField Value="@_search" ValueChanged="((string value) => SearchValueChanged(value))"
+                          DebounceInterval="200" Immediate="true"
+                          Placeholder="Buscar productos" Variant="Variant.Outlined" Class="my-auto"
+                          Margin="Margin.Dense" IconSize="Size.Medium" Style="max-width: 300px; background-color: whitesmoke"
+                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Default" />
 
-        <MudTextField Value="@_search" ValueChanged="((string value) => SearchValueChanged(value))"
-                      DebounceInterval="200" Immediate="true"
-                      Placeholder="Buscar productos" Variant="Variant.Outlined" Class="mx-3 mt-3" 
-                      Margin="Margin.Dense" IconSize="Size.Medium" Style="max-width: 300px; background-color: whitesmoke"
-                      Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" AdornmentColor="Color.Default" />
+            <MudLink Style="font-size:inherit; align-content:center" Class="my-auto ms-10" Href="/categories">Categorías</MudLink>
+        </div>
+
     </MudAppBar>
 
     <MudMainContent>

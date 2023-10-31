@@ -1,6 +1,4 @@
-﻿@* @implements IDisposable
-@inject PersistentComponentState applicationState *@
-@inject IHttpClientFactory ClientFactory
+﻿@inject IHttpClientFactory ClientFactory
 
 
 @if (string.IsNullOrEmpty(errorMessage) == false)
@@ -10,16 +8,14 @@
 else if (categories == null)
 {
     <MudProgressLinear Vertical="true" Color="Color.Primary" Size="Size.Small" Indeterminate="true" />
-@*     <MudText Style="font-size:inherit" GutterBottom="true">Cargando...</MudText>
-    <MudProgressCircular Color="Color.Default" Indeterminate="true" /> *@
 }
 else
 {
-    <MudPaper Elevation="1">
-    <MudTreeView Items="@TreeItems" Dense="true" Hover="true" ExpandOnClick="true" MultiSelection="false" Color="Color.Primary"
+    <MudPaper Elevation="1" Style="background-color:whitesmoke;">
+        <MudTreeView Items="@TreeItems" Dense="true" Hover="true" ExpandOnClick="true" MultiSelection="false" Color="Color.Primary"
                  SelectedValueChanged="((TreeItemData t) => SelectionChanged(t))">
         <ItemTemplate>
-            <MudTreeViewItem @bind-Expanded="@context.IsExpanded" Items="@context.TreeItems" Value="@context">
+                <MudTreeViewItem @bind-Expanded="@context.IsExpanded" Items="@context.TreeItems" Value="@context">
                 <Content>
                     <MudTreeViewItemToggleButton @bind-Expanded="@context.IsExpanded" Visible="@context.HasChild" />
                     <MudText Style="font-size:inherit;">@context.Category.Name</MudText>
@@ -34,14 +30,14 @@ else
 
 @code {
     [Parameter]
+    public bool SetDefaultCategory { get; set; } = false;
+
+    [Parameter]
     public List<int> CategoryIds { get; set; } = new();
 
     [Parameter] 
     public EventCallback<CategoryDto> SelectedCategoryChanged { get; set; }
 
-
-    // private const string cachingKey = "menucategories";
-    // private PersistingComponentStateSubscription persistingSubscription;
 
     private List<CategoryDto>? categories;
     private string errorMessage = "";
@@ -66,12 +62,9 @@ else
         }
     }
 
+
     protected override async Task OnInitializedAsync()
     {
-        // persistingSubscription = applicationState.RegisterOnPersisting(PersistData);
-
-        // if (applicationState.TryTakeFromJson<bool>(cachingKey, out var restored))
-        // {
         var client = ClientFactory.CreateClient(MercadonaOptions.HttpClientName);
         HttpResponseMessage response = await client.GetAsync("categories");
         if (response.IsSuccessStatusCode)
@@ -80,42 +73,38 @@ else
             if (catResponse != null && catResponse.Result != null)
             {
                 categories = catResponse.Result.Data;
-                // InitializeTreeItems(TreeItems);
+                InitializeTreeItems(TreeItems);
+
+                if (SetDefaultCategory)
+                {
+                    int defaultCategoryId = categories?.FirstOrDefault()?.Id ?? 0;
+                    if (defaultCategoryId == 0) return;
+                    var defaultTreeItem = TreeItems.Where(t => t.Category.Id == defaultCategoryId).First();
+                    defaultTreeItem.IsExpanded = true;
+                    await SelectedCategoryChanged.InvokeAsync(defaultTreeItem.Category);                    
+                }
             }
         }
         else
         {
             errorMessage = response.ReasonPhrase ?? "Error desconocido";
         }
-        // }
     }
 
     protected override void OnParametersSet()
     {
-        if (CategoryIds.Count != cachedCategoryIds.Count || 
-            CategoryIds.Except(cachedCategoryIds).Any() ||
-            cachedCategoryIds.Except(CategoryIds).Any())
+        if (CheckParamsChanged())
         {
             TreeItems = new();
             InitializeTreeItems(TreeItems);
 
             cachedCategoryIds = CategoryIds.ToList();
         }
-
-        // base.OnParametersSet();
-            // if (TreeItems.Count == 0)
-            // {
-            //     InitializeTreeItems(TreeItems); 
-            // }
-
     }
 
     private void SelectionChanged(TreeItemData treeItem)
     {
-        if (treeItem != null)
-        {
-            SelectedCategoryChanged.InvokeAsync(treeItem.Category);
-        }
+        if (treeItem != null) SelectedCategoryChanged.InvokeAsync(treeItem.Category);
     }
 
 
@@ -132,15 +121,9 @@ else
         };
     }
 
-
-    // private Task PersistData()
-    // {
-    //     applicationState.PersistAsJson(cachingKey, true);
-    //     return Task.CompletedTask;
-    // }
-
-    // public void Dispose()
-    // {
-    //     persistingSubscription.Dispose();
-    // }
+    private bool CheckParamsChanged() => 
+            (categories != null &&
+            (CategoryIds.Count != cachedCategoryIds.Count ||
+            CategoryIds.Except(cachedCategoryIds).Any() ||
+            cachedCategoryIds.Except(CategoryIds).Any()));
 }

@@ -2,8 +2,7 @@
 
 <MudGrid Style="font-size: 0.8rem;">
     <MudItem xs="2">
-        <MenuCatTreeView SelectedCategoryChanged="OnSelectedCategoryChanged"
-                         CategoryIds="categoryIds" />
+        <MenuCategories SelectedCategoryChanged="OnSelectedCategoryChanged" CategoryIds="categoryIds" />
     </MudItem>
 
     <MudItem xs="10">
@@ -20,11 +19,6 @@
 
     private CategoryDto? selectedCategory;
     private List<int> categoryIds = new();
-
-    protected override void OnInitialized()
-    {
-        base.OnInitialized();
-    }
 
     private void OnSelectedCategoryChanged(CategoryDto value)
     {
