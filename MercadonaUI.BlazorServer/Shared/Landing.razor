@@ -1,7 +1,7 @@
 ﻿    
 <MudContainer MaxWidth="MaxWidth.Large">
-    <MudText Style="font-weight: bold">Productos del momento</MudText>
-    <MudText GutterBottom Style="font-size:smaller">Selección de productos destacados</MudText>
+    <MudText Typo="Typo.h6">Productos del momento</MudText>
+    <MudText GutterBottom Typo="Typo.body2">Selección de productos destacados</MudText>
      <MudCarousel Class="mud-width-full align-content-center" Style="height:250px;" ShowArrows="@arrows" ShowBullets="@bullets" EnableSwipeGesture="@enableSwipeGesture" AutoCycle="@autocycle" TData="object">
          @foreach (string fileName in Directory.EnumerateFiles("wwwroot/slider"))
         {
@@ -13,10 +13,10 @@
         }
     </MudCarousel>
 
-    <MudText Class="mt-10" Style="font-weight:bold;">Bajadas de precio</MudText>
-    <MudText GutterBottom Style="font-size:smaller">Échales un vistazo</MudText>
+    <MudText Class="mt-8" Typo="Typo.h6">Bajadas de precio</MudText>
+    <MudText Typo="Typo.body2">Échales un vistazo</MudText>
      
-    <ProductsGrid LandingMode="true" ItemsXPage="20" />
+    <ProductsGrid LandingMode="true" ItemsXPage="18" />
 
  </MudContainer>
 

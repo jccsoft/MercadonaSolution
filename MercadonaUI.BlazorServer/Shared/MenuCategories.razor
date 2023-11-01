@@ -7,7 +7,7 @@
 }
 else if (categories == null)
 {
-    <MudProgressLinear Vertical="true" Color="Color.Primary" Size="Size.Small" Indeterminate="true" />
+    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
 }
 else
 {
@@ -18,8 +18,7 @@ else
                 <MudTreeViewItem @bind-Expanded="@context.IsExpanded" Items="@context.TreeItems" Value="@context">
                 <Content>
                     <MudTreeViewItemToggleButton @bind-Expanded="@context.IsExpanded" Visible="@context.HasChild" />
-                    <MudText Style="font-size:inherit;">@context.Category.Name</MudText>
-
+                    <MudText Typo="Typo.body2">@context.Category.Name</MudText>
                 </Content>
             </MudTreeViewItem>
         </ItemTemplate>

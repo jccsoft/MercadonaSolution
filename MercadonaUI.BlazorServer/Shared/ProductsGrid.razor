@@ -41,7 +41,7 @@ else if (products != null)
         }  
     }
 
-    <MudPaper Class="d-flex flex-wrap gap-0 align-content-center" Elevation="0" Style="font-size: 0.7rem;">
+    <MudPaper Class="d-flex flex-wrap px-3" Elevation="0">
         @foreach (var product in @products)
         {
             <ProductDisplay Product="product" FromLandingPage="@LandingMode" />
